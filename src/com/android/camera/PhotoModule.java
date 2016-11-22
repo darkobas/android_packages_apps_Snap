@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2012 The Android Open Source Project
- * Copyright (C) 2013-2015 The CyanogenMod Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -575,12 +574,6 @@ public class PhotoModule extends BaseModule<PhotoUI> implements
         CameraSettings.upgradeLocalPreferences(mPreferences.getLocal());
 
         mUI = new PhotoUI(activity, this, (ViewGroup) parent);
-
-        // Power shutter
-        mActivity.initPowerShutter(mPreferences);
-
-        // Max brightness
-        mActivity.initMaxBrightness(mPreferences);
 
         if (mOpenCameraThread == null) {
             mOpenCameraThread = new OpenCameraThread();
@@ -2668,12 +2661,6 @@ public class PhotoModule extends BaseModule<PhotoUI> implements
         // (e.g. onResume -> onPause -> onResume).
         stopPreview();
 
-        // Load the power shutter
-        mActivity.initPowerShutter(mPreferences);
-
-        // Load max brightness
-        mActivity.initMaxBrightness(mPreferences);
-
         mNamedImages = null;
 
         if (mLocationManager != null) mLocationManager.recordLocation(false);
@@ -2811,16 +2798,11 @@ public class PhotoModule extends BaseModule<PhotoUI> implements
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // Do not handle any key if the activity is
-        // not in active camera/video mode
-        if (!mActivity.isInCameraApp()) {
-            return false;
-        }
         switch (keyCode) {
             case KeyEvent.KEYCODE_VOLUME_UP:
             case KeyEvent.KEYCODE_MEDIA_NEXT:
                 if (mFirstTimeInitialized && (mUI.mMenuInitialized)) {
-                    if (!CameraActivity.mPowerShutter && !CameraUtil.hasCameraKey()) {
+                    if (!CameraUtil.hasCameraKey()) {
                         onShutterButtonFocus(true);
                     } else {
                         mUI.onScaleStepResize(true);
@@ -2830,7 +2812,7 @@ public class PhotoModule extends BaseModule<PhotoUI> implements
             case KeyEvent.KEYCODE_VOLUME_DOWN:
             case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
                 if (mFirstTimeInitialized && (mUI.mMenuInitialized)) {
-                    if (!CameraActivity.mPowerShutter && !CameraUtil.hasCameraKey()) {
+                    if (!CameraUtil.hasCameraKey()) {
                         onShutterButtonFocus(true);
                     } else {
                         mUI.onScaleStepResize(false);
@@ -2864,7 +2846,7 @@ public class PhotoModule extends BaseModule<PhotoUI> implements
                 return true;
             case KeyEvent.KEYCODE_POWER:
                 if (mFirstTimeInitialized && event.getRepeatCount() == 0
-                        && CameraActivity.mPowerShutter && !CameraUtil.hasCameraKey()) {
+                        && !CameraUtil.hasCameraKey()) {
                     onShutterButtonFocus(true);
                 }
                 return true;
@@ -2879,7 +2861,7 @@ public class PhotoModule extends BaseModule<PhotoUI> implements
             case KeyEvent.KEYCODE_VOLUME_DOWN:
             case KeyEvent.KEYCODE_MEDIA_NEXT:
             case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
-                if (!CameraActivity.mPowerShutter && !CameraUtil.hasCameraKey()
+                if (!CameraUtil.hasCameraKey()
                         && mFirstTimeInitialized) {
                     onShutterButtonClick();
                     return true;
@@ -2892,7 +2874,7 @@ public class PhotoModule extends BaseModule<PhotoUI> implements
                 }
                 return true;
             case KeyEvent.KEYCODE_POWER:
-                if (CameraActivity.mPowerShutter && !CameraUtil.hasCameraKey()
+                if (!CameraUtil.hasCameraKey()
                         && mFirstTimeInitialized) {
                     onShutterButtonClick();
                 }
@@ -3974,12 +3956,12 @@ public class PhotoModule extends BaseModule<PhotoUI> implements
                 }
             } catch (NullPointerException e) {
             }
-		} else if (chromaFlashOn.equals(mSceneMode)) {
-			try {
-				mUI.setPreference(CameraSettings.KEY_ADVANCED_FEATURES, chromaFlashOn);
-				mParameters.setSceneMode(Parameters.SCENE_MODE_AUTO);
-			} catch (NullPointerException e) {
-			}
+               } else if (chromaFlashOn.equals(mSceneMode)) {
+                       try {
+                               mUI.setPreference(CameraSettings.KEY_ADVANCED_FEATURES, chromaFlashOn);
+                               mParameters.setSceneMode(Parameters.SCENE_MODE_AUTO);
+                       } catch (NullPointerException e) {
+                       }
         } else if (mSceneMode == null) {
             mSceneMode = Parameters.SCENE_MODE_AUTO;
         }
@@ -4017,7 +3999,7 @@ public class PhotoModule extends BaseModule<PhotoUI> implements
                     mSceneMode = Parameters.SCENE_MODE_AUTO;
                 }
             }
-		}
+               }
 
         // Set JPEG quality.
         int jpegQuality;
@@ -4802,10 +4784,9 @@ public class PhotoModule extends BaseModule<PhotoUI> implements
          * have been called by now. But for some reason that is not
          * executed till now, then schedule these functionality for
          * later by posting a message to the handler */
-        if (mUI.mMenuInitialized) {
+       if (mUI.mMenuInitialized) {
             setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
-            mActivity.initPowerShutter(mPreferences);
-            mActivity.initMaxBrightness(mPreferences);
+
         } else {
             mHandler.sendEmptyMessage(SET_PHOTO_UI_PARAMS);
         }

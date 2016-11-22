@@ -368,7 +368,7 @@ class AndroidCameraManagerImpl implements CameraManager {
                         break;
 
                     case STOP_LONGSHOT:
-                        mCamera.stopLongshot();
+                        //mCamera.stopLongshot();
                         break;
 
                     case SET_AUTO_HDR_MODE:
